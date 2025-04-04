@@ -1,0 +1,55 @@
+name: company_app
+description: A Flutter application for a company with login, signup, and home pages.
+
+publish_to: 'none' # Remove this line if you want to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.19.0 <3.0.0" # Adjust the SDK version based on your Flutter version
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2 # For iOS-style icons
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0 # For linting and code analysis
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo.png # Add your company logo here
+    - assets/google_logo.png # Add your company logo here
+    - assets/tuneup-service.jpeg
+    - assets/exterior-service.jpg
+    - assets/interior-service.jpg
+    - assets/lubricant-service.png
+    - assets/wheel-service.webp
+    - assets/wash-service.jpg
+    - assets/collision-service.jpeg
+    - assets/mech-service.jpg
+    - assets/appointment.jpg
+    - assets/logo1.png
+    - assets/logo2.png
+    - assets/logo3.png
+    - assets/logo4.png
+    - assets/logo5.png
+    - assets/logo6.png
+    - assets/logo7.png
+    - assets/logo8.png
+    - assets/logo9.png
+    - assets/logo10.png
+    - assets/logo11.png
+    - assets/logo12.png
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
