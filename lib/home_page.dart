@@ -1,7 +1,6 @@
 import 'package:company_app/logo_slider.dart';
 import 'package:flutter/material.dart';
 
-
 class HomePageContent extends StatelessWidget {
   final List<Map<String, String>> services = [
     {"title": "Mechanical Repair", "short_description": "Fixing mechanical issues with precision.", "long_description": "Our expert technicians handle all kinds of mechanical repairs, including engine diagnostics, transmission issues, and brake system overhauls. We use high-quality parts and advanced tools to ensure your vehicle runs smoothly.", "image": "assets/mech-service.jpg"},
@@ -103,70 +102,35 @@ class HomePageContent extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: "Register ",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
-                            ),
-                            TextSpan(
-                              text: "and",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-                            ),
-                            TextSpan(
-                              text: " Book Appointment ",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
-                            ),
-                            TextSpan(
-                              text: "Today!",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-                            ),
-                          ],
+                      Center(
+                        child: RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: "Register ",
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
+                              ),
+                              TextSpan(
+                                text: "and",
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                              ),
+                              TextSpan(
+                                text: " Book Appointment ",
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
+                              ),
+                              TextSpan(
+                                text: "Today!",
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       SizedBox(height: 16),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Image on left with aspect ratio preservation
-                          Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.grey[300]!, width: 1),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(9), // Slightly smaller to account for border
-                              child: Image.asset(
-                                "assets/appointment.jpg",
-                                width: 120,
-                                height: 120,
-                                fit: BoxFit.contain, // Changed to contain to avoid cropping
-                                errorBuilder: (context, error, stackTrace) {
-                                  // Fallback if image fails to load
-                                  return Container(
-                                    width: 120,
-                                    height: 120,
-                                    color: Colors.grey[300],
-                                    child: Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.image_not_supported, size: 40, color: Colors.grey[700]),
-                                          SizedBox(height: 4),
-                                          Text("Image not found", style: TextStyle(fontSize: 10, color: Colors.grey[700])),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          // Features with ticks on right
+                          // Features with ticks - now takes full width since image is removed
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,5 +218,4 @@ class HomePageContent extends StatelessWidget {
       ),
     );
   }
-
 }
