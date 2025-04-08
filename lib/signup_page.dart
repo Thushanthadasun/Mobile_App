@@ -55,10 +55,6 @@ class _SignupPageState extends State<SignupPage> {
                       children: [
                         // Logo
                         Center(
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.pop(context);
-                            },
                             child: Image.asset(
                               'assets/logo.png',
                               width: isSmallScreen ? 120 : 150,
