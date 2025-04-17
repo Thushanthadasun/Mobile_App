@@ -1,4 +1,4 @@
-import 'package:company_app/logo_slider.dart';
+import 'logo_slider.dart';
 import 'package:flutter/material.dart';
 
 class HomePageContent extends StatelessWidget {
