@@ -3,8 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl =
-      'http://your-ip-address:port/api/user'; // Change this to your real backend URL
+  static const String baseUrl = 'http://192.168.1.5:8080/api/v1/user';
 
   Future<bool> login(String email, String password) async {
     final response = await http.post(
