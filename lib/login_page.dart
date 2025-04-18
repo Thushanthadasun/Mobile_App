@@ -207,25 +207,25 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(
-                          height:
-                              20), //delete from here to remove the home button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/home');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text('Go to Home Page'),
-                        ),
-                      ), //delete to here to delete the home button
+                      //  const SizedBox(
+                      //  height:
+                      //     20), //delete from here to remove the home button
+                      // SizedBox(
+                      // width: double.infinity,
+                      // height: 48,
+                      // child: ElevatedButton(
+                      //  onPressed: () {
+                      //    Navigator.pushNamed(context, '/home');
+                      //  },
+                      //  style: ElevatedButton.styleFrom(
+                      //  backgroundColor: Colors.blue,
+                      //   shape: RoundedRectangleBorder(
+                      //     borderRadius: BorderRadius.circular(8),
+                      //   ),
+                      // ),
+                      // child: const Text('Go to Home Page'),
+                      //),
+                      //), //delete to here to delete the home button
                     ],
                   ),
                 ),
