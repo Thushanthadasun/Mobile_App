@@ -7,7 +7,8 @@ class LogoSlider extends StatefulWidget {
   _LogoSliderState createState() => _LogoSliderState();
 }
 
-class _LogoSliderState extends State<LogoSlider> with SingleTickerProviderStateMixin {
+class _LogoSliderState extends State<LogoSlider>
+    with SingleTickerProviderStateMixin {
   final List<String> logos = [
     'assets/logo1.png',
     'assets/logo2.png',
@@ -36,11 +37,11 @@ class _LogoSliderState extends State<LogoSlider> with SingleTickerProviderStateM
     )..addListener(() {
         final maxScroll = _scrollController.position.maxScrollExtent;
         final currentScroll = _scrollController.position.pixels;
-        
+
         if (currentScroll >= maxScroll) {
           _scrollController.jumpTo(0);
         }
-        
+
         _scrollController.jumpTo(
           _animationController.value * maxScroll,
         );
@@ -84,8 +85,10 @@ class _LogoSliderState extends State<LogoSlider> with SingleTickerProviderStateM
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.grey[200], // Matches white background with subtle contrast
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+              color: Colors
+                  .grey[200], // Matches white background with subtle contrast
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(15)),
             ),
             child: Text(
               'Our Brands',
@@ -97,7 +100,7 @@ class _LogoSliderState extends State<LogoSlider> with SingleTickerProviderStateM
               ),
             ),
           ),
-          
+
           // Logo Slider
           SizedBox(
             height: 100,
@@ -147,13 +150,13 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: Colors.white, // Matching background
       body: Column(
         children: [
-          const SizedBox(height: 20),
-          const LogoSlider(),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
+          LogoSlider(),
+          SizedBox(height: 20),
           // Other widgets...
         ],
       ),
