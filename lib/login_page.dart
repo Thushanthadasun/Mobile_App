@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:car_service_app/api_service.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -124,14 +125,28 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             String email = _emailController.text;
                             String password = _passwordController.text;
-                            if (email.isNotEmpty && password.isNotEmpty) {
+
+                            if (email.isEmpty || password.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Please fill in all fields')),
+                              );
+                              return;
+                            }
+
+                            bool success =
+                                await ApiService().login(email, password);
+
+                            if (success) {
                               Navigator.pushReplacementNamed(context, '/home');
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please fill in all fields')),
+                                const SnackBar(
+                                    content: Text(
+                                        'Login failed — check email or password')),
                               );
                             }
                           },
@@ -144,6 +159,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: const Text('Login'),
                         ),
                       ),
+
                       const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -191,23 +207,25 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),//delete from here to remove the home button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/home');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text('Go to Home Page'),
-                        ),
-                      ),//delete to here to delete the home button
+                      //  const SizedBox(
+                      //  height:
+                      //     20), //delete from here to remove the home button
+                      // SizedBox(
+                      // width: double.infinity,
+                      // height: 48,
+                      // child: ElevatedButton(
+                      //  onPressed: () {
+                      //    Navigator.pushNamed(context, '/home');
+                      //  },
+                      //  style: ElevatedButton.styleFrom(
+                      //  backgroundColor: Colors.blue,
+                      //   shape: RoundedRectangleBorder(
+                      //     borderRadius: BorderRadius.circular(8),
+                      //   ),
+                      // ),
+                      // child: const Text('Go to Home Page'),
+                      //),
+                      //), //delete to here to delete the home button
                     ],
                   ),
                 ),
