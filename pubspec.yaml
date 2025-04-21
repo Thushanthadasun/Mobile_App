@@ -1,55 +1,30 @@
-name: company_app
-description: A Flutter application for a company with login, signup, and home pages.
-
-publish_to: 'none' # Remove this line if you want to publish to pub.dev
-
+name: car_service_app
+description: A mobile app for booking car services.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.19.0 <3.0.0" # Adjust the SDK version based on your Flutter version
+  sdk: ">=2.18.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2 # For iOS-style icons
+  cupertino_icons: ^1.0.2
+
+  # Backend and data handling
+  http: ^0.13.6
+  shared_preferences: ^2.2.0
+
+  # UI enhancements
+  visibility_detector: ^0.4.0+2
+  url_launcher: ^6.1.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0 # For linting and code analysis
+  flutter_lints: ^3.0.1
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/logo.png # Add your company logo here
-    - assets/google_logo.png # Add your company logo here
-    - assets/tuneup-service.jpeg
-    - assets/exterior-service.jpg
-    - assets/interior-service.jpg
-    - assets/lubricant-service.png
-    - assets/wheel-service.webp
-    - assets/wash-service.jpg
-    - assets/collision-service.jpeg
-    - assets/mech-service.jpg
-    - assets/appointment.jpg
-    - assets/logo1.png
-    - assets/logo2.png
-    - assets/logo3.png
-    - assets/logo4.png
-    - assets/logo5.png
-    - assets/logo6.png
-    - assets/logo7.png
-    - assets/logo8.png
-    - assets/logo9.png
-    - assets/logo10.png
-    - assets/logo11.png
-    - assets/logo12.png
-  fonts:
-    - family: Poppins
-      fonts:
-        - asset: assets/fonts/Poppins-Regular.ttf
-        - asset: assets/fonts/Poppins-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Poppins-Bold.ttf
-          weight: 700
+    - assets/
