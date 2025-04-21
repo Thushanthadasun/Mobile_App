@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
         '/home': (context) => const HomePage(),
-        '/book_now': (context) => BookNow(),
+        '/book_now': (context) => const BookNow(),
       },
     );
   }
@@ -41,9 +41,9 @@ class _HomePageState extends State<HomePage> {
 
   static final List<Widget> _pages = <Widget>[
     HomePageContent(),
-    CompanyInfo(),
-    MyProfile(),  // Now loads MyProfile
-    BookNow(),  // Now loads BookNow
+    const CompanyInfo(),
+    const MyProfile(), // Now loads MyProfile
+    const BookNow(), // Now loads BookNow
   ];
 
   void _onItemTapped(int index) {
@@ -112,9 +112,12 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.info), label: 'Company Info'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'My Profile'),
-          BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Book Now'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.info), label: 'Company Info'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person), label: 'My Profile'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.book_online), label: 'Book Now'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.red,
@@ -123,19 +126,15 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  // use one of following _drawerItem function
-  /*
-  Widget _drawerItem(BuildContext context, IconData icon, String title, int index) {
-  return Container(
-    color: Colors.red.withOpacity(0.1), //  red background for the tile
-    child: ListTile(
+
+  Widget _drawerItem(
+      BuildContext context, IconData icon, String title, int index) {
+    return ListTile(
+      // ignore: deprecated_member_use
       leading: Icon(icon, color: Colors.red.withOpacity(0.7)),
-      title: Text(
-        title,
-        style: TextStyle(color: Colors.red.withOpacity(0.7)), // Title text color
-      ),
+      title: Text(title),
       onTap: () {
-        Navigator.pop(context); // Close the drawer first always and then the rest
+        Navigator.pop(context); // Close the drawer
         if (index >= 0) {
           setState(() {
             _selectedIndex = index;
@@ -145,26 +144,6 @@ class _HomePageState extends State<HomePage> {
           Navigator.pushReplacementNamed(context, '/login');
         }
       },
-    ),
-  );
-}
-*/
-  Widget _drawerItem(BuildContext context, IconData icon, String title, int index) {
-  return ListTile(//setting color only to the title
-    leading: Icon(icon, color: Colors.red.withOpacity(0.7)),
-    title: Text(title),
-    onTap: () {
-      Navigator.pop(context); // Close the drawer first always and then the rest
-      if (index >= 0) {
-        setState(() {
-          _selectedIndex = index;
-        });
-      } else {
-        // Log out case: Navigate to login page
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    },
-  );
-}
-
+    );
+  }
 }
