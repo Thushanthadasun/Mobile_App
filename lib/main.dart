@@ -123,14 +123,38 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
+  // use one of following _drawerItem function
+  /*
   Widget _drawerItem(BuildContext context, IconData icon, String title, int index) {
-  return ListTile(
-    // ignore: deprecated_member_use
+  return Container(
+    color: Colors.red.withOpacity(0.1), //  red background for the tile
+    child: ListTile(
+      leading: Icon(icon, color: Colors.red.withOpacity(0.7)),
+      title: Text(
+        title,
+        style: TextStyle(color: Colors.red.withOpacity(0.7)), // Title text color
+      ),
+      onTap: () {
+        Navigator.pop(context); // Close the drawer first always and then the rest
+        if (index >= 0) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        } else {
+          // Log out case: Navigate to login page
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      },
+    ),
+  );
+}
+*/
+  Widget _drawerItem(BuildContext context, IconData icon, String title, int index) {
+  return ListTile(//setting color only to the title
     leading: Icon(icon, color: Colors.red.withOpacity(0.7)),
     title: Text(title),
     onTap: () {
-      Navigator.pop(context); // Close the drawer
+      Navigator.pop(context); // Close the drawer first always and then the rest
       if (index >= 0) {
         setState(() {
           _selectedIndex = index;
