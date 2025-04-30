@@ -1,12 +1,11 @@
 import 'package:company_app/logo_slider.dart';
+import 'package:company_app/book_now.dart'; 
 import 'package:flutter/material.dart';
 
 class HomePageContent extends StatelessWidget {
   final List<Map<String, String>> services = [
     {"title": "Mechanical Repair", "short_description": "Fixing mechanical issues with precision.", "long_description": "Our expert technicians handle all kinds of mechanical repairs, including engine diagnostics, transmission issues, and brake system overhauls. We use high-quality parts and advanced tools to ensure your vehicle runs smoothly.", "image": "assets/mech-service.jpg"},
     {"title": "Collision Repair", "short_description": "Restoring vehicles after accidents.", "long_description": "We specialize in repairing accident damage, from minor dents to major structural repairs. Our state-of-the-art facility ensures your car is restored to its pre-accident condition with precision and care.", "image": "assets/collision-service.jpeg"},
-    {"title": "Wash and Grooming", "short_description": "Premium cleaning and grooming services.", "long_description": "We provide thorough interior and exterior cleaning, including waxing, polishing, and vacuuming. Our services help maintain your vehicle's aesthetics and value.", "image": "assets/wash-service.jpg"},
-    {"title": "Wheel Services", "short_description": "Alignment and balancing for smooth rides.", "long_description": "Our wheel services include tire rotation, balancing, alignment, and replacement. Proper wheel maintenance improves fuel efficiency and ensures a smooth ride.", "image": "assets/wheel-service.webp"},
     {"title": "Lubricant Services", "short_description": "Essential lubrication for engine longevity.", "long_description": "Regular oil changes and lubrication services are crucial for engine health. We use high-quality oils and lubricants to ensure smooth performance and reduce wear and tear.", "image": "assets/lubricant-service.png"},
     {"title": "Interior Services", "short_description": "Keeping your car's interior spotless.", "long_description": "Our interior detailing services include deep cleaning, odor removal, and upholstery restoration, ensuring a fresh and comfortable driving experience.", "image": "assets/interior-service.jpg"},
     {"title": "Exterior Services", "short_description": "Polishing and protecting your car's body.", "long_description": "We offer paint protection, waxing, and scratch removal to maintain your car's shine and protect it from environmental damage.", "image": "assets/exterior-service.jpg"},
@@ -29,6 +28,28 @@ class HomePageContent extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text("Close"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RegisterServicePage(),
+                  settings: RouteSettings(arguments: {'service_title': title}),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              "Register",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -130,7 +151,7 @@ class HomePageContent extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Features with ticks - now takes full width since image is removed
+                          
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
