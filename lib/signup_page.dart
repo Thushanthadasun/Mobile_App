@@ -30,7 +30,7 @@ class _SignupPageState extends State<SignupPage> {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.red.withOpacity(0.7), Colors.white],
+                    colors: [Colors.white, Colors.red.withOpacity(0.1)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -55,9 +55,13 @@ class _SignupPageState extends State<SignupPage> {
                       children: [
                         // Logo
                         Center(
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
                             child: Image.asset(
                               'assets/logo.png',
-                              width: isSmallScreen ? 120 : 150,
+                              width: isSmallScreen ? 170 : 200,
                               errorBuilder: (context, error, stackTrace) {
                                 return Icon(
                                   Icons.account_circle,

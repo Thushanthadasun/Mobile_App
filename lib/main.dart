@@ -57,12 +57,12 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: SizedBox(
-          height: 40,
+          height: 60,
           child: Image.asset('assets/logo.png'),
         ),
         centerTitle: true,
         // ignore: deprecated_member_use
-        backgroundColor: Colors.red.withOpacity(0.7),
+        backgroundColor: const Color.fromARGB(255, 245, 215, 213).withOpacity(0.7),
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.white),
@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   // ignore: deprecated_member_use
-                  colors: [Colors.red.withOpacity(0.7), Colors.white],
+                  colors: [Colors.white, Colors.red.withOpacity(0.7)],
                 ),
               ),
               child: Center(
@@ -102,7 +102,7 @@ class _HomePageState extends State<HomePage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             // ignore: deprecated_member_use
-            colors: [Colors.red.withOpacity(0.7), Colors.white],
+            colors: [Colors.white, Colors.red.withOpacity(0.7)],
           ),
         ),
         child: Center(
@@ -123,38 +123,14 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  // use one of following _drawerItem function
-  /*
+
   Widget _drawerItem(BuildContext context, IconData icon, String title, int index) {
-  return Container(
-    color: Colors.red.withOpacity(0.1), //  red background for the tile
-    child: ListTile(
-      leading: Icon(icon, color: Colors.red.withOpacity(0.7)),
-      title: Text(
-        title,
-        style: TextStyle(color: Colors.red.withOpacity(0.7)), // Title text color
-      ),
-      onTap: () {
-        Navigator.pop(context); // Close the drawer first always and then the rest
-        if (index >= 0) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        } else {
-          // Log out case: Navigate to login page
-          Navigator.pushReplacementNamed(context, '/login');
-        }
-      },
-    ),
-  );
-}
-*/
-  Widget _drawerItem(BuildContext context, IconData icon, String title, int index) {
-  return ListTile(//setting color only to the title
+  return ListTile(
+    // ignore: deprecated_member_use
     leading: Icon(icon, color: Colors.red.withOpacity(0.7)),
     title: Text(title),
     onTap: () {
-      Navigator.pop(context); // Close the drawer first always and then the rest
+      Navigator.pop(context); // Close the drawer
       if (index >= 0) {
         setState(() {
           _selectedIndex = index;
