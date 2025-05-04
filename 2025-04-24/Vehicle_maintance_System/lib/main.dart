@@ -69,11 +69,11 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: SizedBox(
-          height: 40,
+          height: 60,
           child: Image.asset('assets/logo.png'),
         ),
         centerTitle: true,
-        backgroundColor: Colors.red.withOpacity(0.7),
+        backgroundColor: const Color.fromARGB(255, 245, 215, 213).withOpacity(0.7),
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.white),
@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
             DrawerHeader(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.red.withOpacity(0.7), Colors.white],
+                  colors: [Colors.white, Colors.red.withOpacity(0.7)],
                 ),
               ),
               child: Center(
@@ -111,7 +111,7 @@ class _HomePageState extends State<HomePage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.red.withOpacity(0.7), Colors.white],
+            colors: [Colors.white, Colors.red.withOpacity(0.7)],
           ),
         ),
         child: Center(
