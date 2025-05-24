@@ -1,5 +1,5 @@
 import 'logo_slider.dart';
-import 'package:company_app/book_now.dart'; 
+import 'book_now.dart'; 
 import 'package:flutter/material.dart';
 
 class HomePageContent extends StatelessWidget {
