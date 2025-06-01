@@ -27,6 +27,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/
     - assets/mech-service.jpg
     - assets/collision-service.jpeg
     - assets/lubricant-service.png
