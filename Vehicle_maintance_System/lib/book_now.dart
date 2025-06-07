@@ -8,21 +8,18 @@ class BookNow extends StatefulWidget {
 }
 
 class _BookNowState extends State<BookNow> {
-  bool _isPaymentCompleted = false; // Tracks payment status locally
+  bool _isPaymentCompleted = false;
 
-  // Simulate fetching service status from backend
   Future<Map<String, dynamic>> _fetchServiceStatus() async {
-    // Placeholder data (replace with actual backend call later)
-    await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
     return {
-      'hasActiveBooking': true, // Toggle to false for "No active bookings"
-      'estimatedTime': 120, // Total estimated time in minutes (e.g., 2 hours)
-      'progressPercentage': 75, // Current progress (0-100)
-      'totalCost': 150.0, // Total cost in dollars
+      'hasActiveBooking': true,
+      'estimatedTime': 120,
+      'progressPercentage': 75,
+      'totalCost': 150.0,
     };
   }
 
-  // Simulate payment action
   void _handlePayment(BuildContext context) {
     showDialog(
       context: context,
@@ -34,7 +31,7 @@ class _BookNowState extends State<BookNow> {
             onPressed: () {
               Navigator.pop(context);
               setState(() {
-                _isPaymentCompleted = true; // Mark payment as completed
+                _isPaymentCompleted = true;
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -52,7 +49,6 @@ class _BookNowState extends State<BookNow> {
         ],
       ),
     );
-    // Later, integrate with payment gateway and update _isPaymentCompleted based on response
   }
 
   @override
@@ -63,8 +59,7 @@ class _BookNowState extends State<BookNow> {
         backgroundColor: Colors.red,
       ),
       body: Container(
-        // Red-to-white gradient background
-        decoration: const BoxDecoration(
+        decoration: const BoxDecoration( // CHANGE: Fixed 'Hannah' to 'decoration'
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -80,7 +75,6 @@ class _BookNowState extends State<BookNow> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Current service status card with price, payment button, and status
                 Card(
                   elevation: 4,
                   child: Padding(
@@ -99,66 +93,33 @@ class _BookNowState extends State<BookNow> {
                         FutureBuilder<Map<String, dynamic>>(
                           future: _fetchServiceStatus(),
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
                             } else if (snapshot.hasError) {
-                              return const Text('Error loading service status',
-                                  style: TextStyle(color: Colors.red));
+                              return const Text('Error loading service status', style: TextStyle(color: Colors.red));
                             } else if (snapshot.hasData) {
                               final data = snapshot.data!;
                               if (!data['hasActiveBooking']) {
-                                return Text(
-                                  'No active bookings found',
-                                  style: TextStyle(color: Colors.grey[600]),
-                                );
+                                return Text('No active bookings found', style: TextStyle(color: Colors.grey[600]));
                               }
-
-                              // Extract data from "backend"
-                              final estimatedTime =
-                                  data['estimatedTime'] as int;
-                              final progressPercentage =
-                                  data['progressPercentage'] as int;
+                              final estimatedTime = data['estimatedTime'] as int;
+                              final progressPercentage = data['progressPercentage'] as int;
                               final totalCost = data['totalCost'] as double;
-                              final remainingTime = (estimatedTime *
-                                      (1 - progressPercentage / 100))
-                                  .round(); // Calculate remaining time
-
+                              final remainingTime = (estimatedTime * (1 - progressPercentage / 100)).round();
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Estimated Time
-                                  Text(
-                                    'Estimated Time: ${estimatedTime ~/ 60}h ${estimatedTime % 60}m',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
+                                  Text('Estimated Time: ${estimatedTime ~/ 60}h ${estimatedTime % 60}m', style: const TextStyle(fontSize: 16)),
                                   const SizedBox(height: 10),
-                                  // Total Cost
-                                  Text(
-                                    'Total Cost: \$${totalCost.toStringAsFixed(2)}',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
+                                  Text('Total Cost: \$${totalCost.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
                                   const SizedBox(height: 10),
-                                  // Progress Percentage with Bar
                                   Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
+                                      Text('Progress: $progressPercentage%', style: const TextStyle(fontSize: 16)),
                                       Text(
-                                        'Progress: $progressPercentage%',
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                      Text(
-                                        progressPercentage == 100
-                                            ? 'Completed'
-                                            : '$remainingTime min remaining',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: progressPercentage == 100
-                                              ? Colors.green
-                                              : Colors.grey[600],
-                                        ),
+                                        progressPercentage == 100 ? 'Completed' : '$remainingTime min remaining',
+                                        style: TextStyle(fontSize: 16, color: progressPercentage == 100 ? Colors.green : Colors.grey[600]),
                                       ),
                                     ],
                                   ),
@@ -166,47 +127,26 @@ class _BookNowState extends State<BookNow> {
                                   LinearProgressIndicator(
                                     value: progressPercentage / 100,
                                     backgroundColor: Colors.grey[300],
-                                    valueColor:
-                                        const AlwaysStoppedAnimation<Color>(
-                                            Colors.red),
+                                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
                                   ),
                                   const SizedBox(height: 10),
-                                  // Payment Status and Button
                                   if (_isPaymentCompleted)
-                                    const Text(
-                                      'Payment Completed',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    )
+                                    const Text('Payment Completed', style: TextStyle(fontSize: 16, color: Colors.green, fontWeight: FontWeight.bold))
                                   else
                                     ElevatedButton(
-                                      onPressed: progressPercentage == 100
-                                          ? null // Disabled if service completed
-                                          : () => _handlePayment(context),
+                                      onPressed: progressPercentage == 100 ? null : () => _handlePayment(context),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.red,
-                                        foregroundColor:
-                                            Colors.white, // Text color changed
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 20, vertical: 12),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                         minimumSize: const Size(100, 40),
                                       ),
-                                      child: const Text(
-                                        'Pay Now',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                      child: const Text('Pay Now', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                                     ),
                                 ],
                               );
                             }
-                            return Text('No data available',
-                                style: TextStyle(color: Colors.grey[600]));
+                            return Text('No data available', style: TextStyle(color: Colors.grey[600]));
                           },
                         ),
                         const SizedBox(height: 10),
@@ -215,8 +155,6 @@ class _BookNowState extends State<BookNow> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Special offers (no recommended messages)
                 const Card(
                   elevation: 4,
                   child: Padding(
@@ -224,13 +162,7 @@ class _BookNowState extends State<BookNow> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Special Offers',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        Text('Special Offers', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         SizedBox(height: 10),
                         OfferItem(
                           title: 'Annual Service Discount',
@@ -242,29 +174,16 @@ class _BookNowState extends State<BookNow> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Main booking button
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RegisterServicePage(),
-                      ),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterServicePage()));
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
-                    foregroundColor: Colors.white, // Text color changed
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
-                  child: const Text(
-                    'REGISTER FOR SERVICE',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: const Text('REGISTER FOR SERVICE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -275,18 +194,12 @@ class _BookNowState extends State<BookNow> {
   }
 }
 
-// Widget for displaying offers
 class OfferItem extends StatelessWidget {
   final String title;
   final String description;
   final String validUntil;
 
-  const OfferItem({
-    super.key,
-    required this.title,
-    required this.description,
-    required this.validUntil,
-  });
+  const OfferItem({super.key, required this.title, required this.description, required this.validUntil});
 
   @override
   Widget build(BuildContext context) {
@@ -295,33 +208,21 @@ class OfferItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 4),
           Text(description),
           const SizedBox(height: 2),
-          Text(
-            validUntil,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          Text(validUntil, style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
         ],
       ),
     );
   }
 }
 
-// Registration page that collects user details
 class RegisterServicePage extends StatefulWidget {
-  const RegisterServicePage({super.key});
+  final String? preSelectedService;
+
+  const RegisterServicePage({super.key, this.preSelectedService});
 
   @override
   _RegisterServicePageState createState() => _RegisterServicePageState();
@@ -329,12 +230,27 @@ class RegisterServicePage extends StatefulWidget {
 
 class _RegisterServicePageState extends State<RegisterServicePage> {
   final _formKey = GlobalKey<FormState>();
-
-  // Form fields
   String vehicleNumber = '';
-  String issueDescription = '';
+  final List<String> selectedServices = [];
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
+
+  final List<Map<String, String>> services = [
+    {"title": "Mechanical Repair", "short_description": "Fixing mechanical issues with precision."},
+    {"title": "Collision Repair", "short_description": "Restoring vehicles after accidents."},
+    {"title": "Lubricant Services", "short_description": "Essential lubrication for engine longevity."},
+    {"title": "Interior Services", "short_description": "Keeping your car's interior spotless."},
+    {"title": "Exterior Services", "short_description": "Polishing and protecting your car's body."},
+    {"title": "Engine Tune-up", "short_description": "Enhancing engine performance and efficiency."},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.preSelectedService != null && services.any((service) => service['title'] == widget.preSelectedService)) {
+      selectedServices.add(widget.preSelectedService!);
+    }
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -376,16 +292,8 @@ class _RegisterServicePageState extends State<RegisterServicePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Vehicle Details',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const Text('Vehicle Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
-
-              // Vehicle number field
               TextFormField(
                 decoration: const InputDecoration(
                   labelText: 'Vehicle Number',
@@ -402,38 +310,36 @@ class _RegisterServicePageState extends State<RegisterServicePage> {
                   vehicleNumber = value!;
                 },
               ),
+              const SizedBox(height: 20),
+              const Text('Select Services', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 15),
-
-              // Issue description field
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Describe the Issue',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.build),
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please describe the issue';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  issueDescription = value!;
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: services.length,
+                itemBuilder: (context, index) {
+                  final service = services[index];
+                  final isChecked = selectedServices.contains(service['title']);
+                  return CheckboxListTile(
+                    title: Text(service['title']!),
+                    subtitle: Text(service['short_description']!),
+                    value: isChecked,
+                    activeColor: Colors.red,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        if (value == true) {
+                          selectedServices.add(service['title']!);
+                        } else {
+                          selectedServices.remove(service['title']);
+                        }
+                      });
+                    },
+                  );
                 },
               ),
               const SizedBox(height: 20),
-
-              const Text(
-                'Preferred Schedule',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const Text('Preferred Schedule', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 15),
-
-              // Date picker
               InkWell(
                 onTap: () => _selectDate(context),
                 child: InputDecorator(
@@ -442,14 +348,10 @@ class _RegisterServicePageState extends State<RegisterServicePage> {
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.calendar_today),
                   ),
-                  child: Text(
-                    '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                  ),
+                  child: Text('${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'),
                 ),
               ),
               const SizedBox(height: 15),
-
-              // Time picker
               InkWell(
                 onTap: () => _selectTime(context),
                 child: InputDecorator(
@@ -458,43 +360,38 @@ class _RegisterServicePageState extends State<RegisterServicePage> {
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.access_time),
                   ),
-                  child: Text(
-                    "${selectedTime.hour}:${selectedTime.minute.toString().padLeft(2, '0')}",
-                  ),
+                  child: Text("${selectedTime.hour}:${selectedTime.minute.toString().padLeft(2, '0')}"),
                 ),
               ),
               const SizedBox(height: 30),
-
-              // Submit button
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
+                    if (selectedServices.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please select at least one service'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
                     _formKey.currentState!.save();
-
-                    // Here you would normally save to database
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Booking registered successfully!'),
+                      SnackBar(
+                        content: Text('Booking registered successfully for: ${selectedServices.join(', ')}'),
                         backgroundColor: Colors.green,
                       ),
                     );
-
-                    // Go back to previous screen
                     Navigator.pop(context);
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  foregroundColor: Colors.white, // Text color changed
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
-                child: const Text(
-                  'SUBMIT BOOKING',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text('SUBMIT BOOKING', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
