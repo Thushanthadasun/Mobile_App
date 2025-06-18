@@ -1,0 +1,5 @@
+cd "C:\Users\HP\Desktop\softwair project\2025-05-22fixed\2025-05-22\server"
+
+node server.mjs
+
+flutter run -d chrome --web-port=3000                     
