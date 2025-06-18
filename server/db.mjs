@@ -6,8 +6,8 @@ dotenv.config();
 const pool = new pg.Pool({ 
     user: 'postgres',
     host: 'localhost',
-    database: 'Vehicle_maintance_System',
-    password: 'Dh123456#',
+    database: 'service-center',
+    password: '1111111111',
     port: 5432,
 });
 

@@ -13,10 +13,13 @@ import {
   registerVehicle,
   loadVehicleTypes,
   loadVehicleBrands,
+  loadVehicles,
+  bookService,
+  loadServiceTypes,
+  loadMaintenanceHistory,
+  loadCurrentServiceStatus,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
-
-//User functions here
 
 const userRouter = Router();
 
@@ -34,5 +37,10 @@ userRouter.post("/reset-password", resetPassword);
 userRouter.post("/register-vehicle", upload.single("vehicleImage"), registerVehicle);
 userRouter.get("/loadVehicleTypes", loadVehicleTypes);
 userRouter.get("/loadVehicleBrands", loadVehicleBrands);
+userRouter.get("/vehicles", loadVehicles);
+userRouter.post("/book-service", bookService);
+userRouter.get("/loadServiceTypes", loadServiceTypes);
+userRouter.get("/maintenance-history", loadMaintenanceHistory);
+userRouter.get("/current-service-status", loadCurrentServiceStatus);
 
 export default userRouter;

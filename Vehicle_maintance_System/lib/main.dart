@@ -5,7 +5,9 @@ import 'my_profile.dart';
 import 'book_now.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
-import 'email_activation_page.dart'; // ✅ Import your new email activation page
+import 'email_activation_page.dart';
+import 'vehicle_list_page.dart';
+import 'vehicle_registration_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,11 +23,12 @@ class MyApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginPage(),
-        '/register': (context) => const SignupPage(), // ✅ safer
+        '/register': (context) => const SignupPage(),
         '/home': (context) => const HomePage(),
         '/book_now': (context) => const BookNow(),
+        '/vehicle_list': (context) => const VehicleListPage(),
+        '/vehicle_registration': (context) => VehicleRegistrationPage(), // ✅ Removed const
       },
-      // ✅ Handle dynamic token-based route for email verification
       onGenerateRoute: (settings) {
         final uri = Uri.parse(settings.name ?? '');
         if (uri.path == '/emailactivation' &&
@@ -102,6 +105,8 @@ class _HomePageState extends State<HomePage> {
             _drawerItem(context, Icons.info, 'Company Info', 1),
             _drawerItem(context, Icons.person, 'My Profile', 2),
             _drawerItem(context, Icons.book_online, 'Book Now', 3),
+            _drawerItem(context, Icons.directions_car, 'My Vehicles', -2),
+            _drawerItem(context, Icons.add_circle, 'Register Vehicle', -3),
             _drawerItem(context, Icons.logout, 'Log Out', -1),
           ],
         ),
@@ -147,8 +152,12 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             _selectedIndex = index;
           });
-        } else {
+        } else if (index == -1) {
           Navigator.pushReplacementNamed(context, '/login');
+        } else if (index == -2) {
+          Navigator.pushNamed(context, '/vehicle_list');
+        } else if (index == -3) {
+          Navigator.pushNamed(context, '/vehicle_registration');
         }
       },
     );

@@ -1,37 +1,52 @@
-// src/middleware/upload.mjs
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 
+// Ensure uploads directory exists
+const uploadDir = "uploads/";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Set up storage configuration
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // change path if needed
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
   },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname).toLowerCase());
+  },
 });
 
-
-// File filter
+// File filter to accept only images
 const fileFilter = (req, file, cb) => {
-  const allowedFileTypes = /jpeg|jpg|png|gif/;
-  const extname = allowedFileTypes.test(
-    path.extname(file.originalname).toLowerCase()
-  );
-  const mimetype = allowedFileTypes.test(file.mimetype);
+  const allowedFileTypes = /\.(jpeg|jpg|png|gif)$/i;
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+  ];
+
+  const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedMimeTypes.includes(file.mimetype);
 
   if (extname && mimetype) {
-    return cb(null, true);
+    cb(null, true);
   } else {
-    cb(new Error("Error: Images Only! (jpeg, jpg, png, gif)"));
+    console.log("File rejected:", {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      extname: path.extname(file.originalname),
+    });
+    cb(new Error("Images Only! (jpeg, jpg, png, gif)"), false);
   }
 };
 
-
-// Initialize upload
+// Initialize multer with storage and file filter
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1024 * 1024 * 10 }, // 10MB max file size
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max file size
   fileFilter: fileFilter,
 });
 
