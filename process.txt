@@ -1,9 +1,0 @@
-run ok 
-Back end ok
-front ok
-database 0k
-registration ok
-login ok
-email verification ok
-mobile verification off temporally
- 
