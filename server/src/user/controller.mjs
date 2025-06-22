@@ -1,11 +1,9 @@
 import bcrypt from "bcrypt";
-import pool from "../../db.mjs";
 import { tokenGen, tokenGenLogin, verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
-import { verifyToken } from "../utils/jwt.mjs";
 import pool from "../../db.mjs";
 
 dotenv.config();
