@@ -5,6 +5,8 @@ import { sendEmail } from "../utils/email.mjs";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
+import { verifyToken } from "../utils/jwt.mjs";
+import pool from "../../db.mjs";
 
 dotenv.config();
 
@@ -82,6 +84,37 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+export const getUserProfile = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token); // returns { userID: 'CUS12', email: '...' }
+
+    const query = `
+      SELECT u.first_name, u.last_name, u.email, m.mobile_no
+      FROM users u
+      JOIN mobile_number m ON u.mobile_id = m.mobile_id
+      WHERE u.user_id = $1
+    `;
+
+    const result = await pool.query(query, [decoded.userID]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error("Profile error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
 
 export const loginUser = async (req, res) => {
   try {
