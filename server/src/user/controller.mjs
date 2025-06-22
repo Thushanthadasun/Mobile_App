@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { tokenGen, tokenGenLogin, verifyToken } from "../utils/jwt.mjs";
+import { tokenGen, tokenGenLogin, verifyToken } from "../utils/jwt.mjs"; // ✅ single import only
 import { sendEmail } from "../utils/email.mjs";
 import dotenv from "dotenv";
 import fs from "fs";
@@ -116,7 +116,8 @@ export const getUserProfile = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    const { email, password, rememberMe } = req.body;
+    const { email, password } = req.body;
+
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
@@ -125,11 +126,13 @@ export const loginUser = async (req, res) => {
       "SELECT * FROM users INNER JOIN mobile_number ON users.mobile_id = mobile_number.mobile_id WHERE email = $1 AND status = $2",
       [email, true]
     );
+
     if (checkUser.rows.length === 0) {
       return res.status(400).json({ message: "Invalid username" });
     }
 
     const user = checkUser.rows[0];
+
     if (!user.isemailverified) {
       return res.status(400).json({ message: "Email not verified" });
     }
@@ -139,41 +142,27 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = tokenGenLogin(
-      { userID: user.user_id, email: user.email },
-      rememberMe
-    );
+    // ✅ Generate token using user info
+    const token = tokenGenLogin({ userID: user.user_id, email: user.email });
 
-    const cookieExpiration = rememberMe
-      ? 7 * 24 * 60 * 60 * 1000
-      : 24 * 60 * 60 * 1000;
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: cookieExpiration,
-      path: "/",
+    // ✅ Just return token and user data (no cookies)
+    return res.status(200).json({
+      token,
+      user: {
+        id: user.user_id,
+        fname: user.fname,
+        lname: user.lname,
+        email: user.email,
+        mobile: user.mobile_no
+      }
     });
 
-    if (rememberMe) {
-      res.cookie("rememberUser", encodeURIComponent(email), {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: false,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        path: "/",
-      });
-    } else {
-      res.clearCookie("rememberUser");
-    }
-
-    res.status(200).json({ token, user: user.user_id });
   } catch (error) {
     console.error("Error in loginUser:", error.message, error.stack);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
 
 export const emailVerify = async (req, res) => {
   try {
@@ -413,30 +402,51 @@ export const loadUserData = async (req, res) => {
   }
 };
 
+
+
 export const authUser = async (req, res) => {
   try {
-    const { token } = req.cookies;
-    if (!token) {
-      return res.status(401).json({ message: "No cookies available" });
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Authorization header missing" });
     }
-    const decodedToken = verifyToken(token);
-    if (!decodedToken) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    const userID = decodedToken.userID;
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
-      [userID]
+
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token); // ✅ This will decode userID and email
+
+    // ✅ Use correct column names with aliases
+    const result = await pool.query(
+      `SELECT 
+         first_name AS fname,
+         last_name AS lname,
+         email,
+         mobile_no 
+       FROM users 
+       INNER JOIN mobile_number ON users.mobile_id = mobile_number.mobile_id 
+       WHERE users.user_id = $1`,
+      [decoded.userID]
     );
-    if (checkUser.rows.length === 0) {
-      return res.status(400).json({ message: "Invalid User" });
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json({ message: "Authorized" });
+
+    const user = result.rows[0];
+
+    res.status(200).json({
+      fname: user.fname,
+      lname: user.lname,
+      email: user.email,
+      mobile: user.mobile_no,
+    });
   } catch (error) {
-    console.error("Error in authUser:", error.message, error.stack);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    console.error("Error in authUser:", error.message);
+    res.status(500).json({ message: "Failed to get user profile", error: error.message });
   }
 };
+
+
 
 export const logout = async (req, res) => {
   try {
