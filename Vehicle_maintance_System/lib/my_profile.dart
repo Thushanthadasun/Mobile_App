@@ -50,8 +50,8 @@ class _MyProfileState extends State<MyProfile> {
     final data = await ApiService().getUserProfile();
     if (data != null) {
       setState(() {
-        userName = '${data['first_name']} ${data['last_name']}';
-        contactNumber = data['mobile_no'];
+        userName = '${data['fname']} ${data['lname']}'; // ✅ fixed here
+        contactNumber = data['mobile']; // ✅ fixed here
         email = data['email'];
         loading = false;
       });
