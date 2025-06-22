@@ -16,14 +16,18 @@ class ApiService {
       }),
     );
 
+    print('📥 Login response: ${response.body}'); // 🔍 Debug print
+
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final token = data['token'];
+
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', token);
+      await prefs.setString('token', token); // 🗝️ Save token locally
+
       return true;
     } else {
-      print('Login failed: ${response.body}');
+      print('❌ Login failed: ${response.body}');
       return false;
     }
   }
@@ -46,8 +50,13 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
+    if (token == null) {
+      print('⚠️ No token found');
+      return null;
+    }
+
     final response = await http.get(
-      Uri.parse('$baseUrl/profile'),
+      Uri.parse('$baseUrl/authUser'), // ✅ Fix here
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -55,7 +64,13 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      return {
+        'fname': data['fname']?.toString() ?? '',
+        'lname': data['lname']?.toString() ?? '',
+        'email': data['email']?.toString() ?? '',
+        'mobile': data['mobile']?.toString() ?? '',
+      };
     } else {
       print('❌ Failed to load profile: ${response.body}');
       return null;
