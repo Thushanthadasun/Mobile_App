@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+import pg from 'pg';
+
+const pool = new pg.Pool({
+  user: 'postgres',
+  host: 'vscdatabase.cxaogewmsid6.ap-south-1.rds.amazonaws.com',
+  database: 'service-center',
+  password: 'Vehicle12345',
+  port: 5432,
+  ssl: {
+    rejectUnauthorized: false, // Required for AWS RDS or any SSL-based connection
+  },
+});
+
+export default pool;
+=======
 import pg from "pg";
 
 const pool = new pg.Pool({
@@ -27,3 +43,4 @@ const pool = new pg.Pool({
 export default pool;
 
 */
+>>>>>>> 43376c16547ad2f3c7b6cbde5b95fad1c8c053d7
