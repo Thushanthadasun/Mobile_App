@@ -15,11 +15,7 @@ dependencies:
   visibility_detector: ^0.4.0+2
   url_launcher: ^6.1.7
   image_picker: ^1.0.7  # Use the latest version
-<<<<<<< HEAD
   permission_handler: ^12.0.1  # Use the latest version
-=======
-  permission_handler: ^10.4.4  # Use the latest version
->>>>>>> 43376c16547ad2f3c7b6cbde5b95fad1c8c053d7
 
  
 
