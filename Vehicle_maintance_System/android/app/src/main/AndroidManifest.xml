@@ -1,20 +1,11 @@
-<<<<<<< HEAD
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-=======
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.untitled5"> <!-- 🔧 Replace with your actual package name -->
->>>>>>> 43376c16547ad2f3c7b6cbde5b95fad1c8c053d7
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
-<<<<<<< HEAD
         android:label="Car Service App"
-=======
-        android:label="untitled5"
->>>>>>> 43376c16547ad2f3c7b6cbde5b95fad1c8c053d7
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
@@ -59,8 +50,4 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
-<<<<<<< HEAD
 </manifest>
-=======
-</manifest>
->>>>>>> 43376c16547ad2f3c7b6cbde5b95fad1c8c053d7
