@@ -800,11 +800,7 @@ export const loadMaintenanceHistory = async (req, res) => {
         v.license_plate,
         sr.service_record_id,
         sr.service_description,
-<<<<<<< HEAD
         sr.final_amount,
-=======
-        sr.price,
->>>>>>> 43376c16547ad2f3c7b6cbde5b95fad1c8c053d7
         sr.created_datetime,
         sr.is_paid,
         TO_CHAR(r.reserve_date, 'YYYY-MM-DD') AS reserve_date,
@@ -864,11 +860,7 @@ export const loadCurrentServiceStatus = async (req, res) => {
         TO_CHAR(r.end_time, 'HH24:MI:SS') AS end_time,
         st.duration,
         rs.status_name,
-<<<<<<< HEAD
         sr.final_amount,
-=======
-        sr.price,
->>>>>>> 43376c16547ad2f3c7b6cbde5b95fad1c8c053d7
         sr.is_paid,
         sr.service_record_id
       FROM reservations r
