@@ -557,6 +557,7 @@ export const resendVerifyEmail = async (req, res) => {
 const sendVerificationEmail = async (email) => {
   try {
     const token = tokenGen({ email });
+    // Use CLIENT_URL for the link that opens the Flutter web app's activation page
     await sendEmail(
       email,
       "Auto Lanka Services, Email Verification",
@@ -565,11 +566,11 @@ const sendVerificationEmail = async (email) => {
 
         Thank you for registering with Auto Lanka Services. To complete your registration and activate your account, please verify your email address by clicking the button below:
 
-        <a href="http://10.116.44.203:5000/api/v1/user/emailverify?token=${token}">Click here to verify</a>
+        <a href="${process.env.CLIENT_URL}/emailactivation?token=${token}">Click here to verify</a>
 
         If the button doesn't work, you can also copy and paste the following link into your browser:
 
-        http://10.116.44.203:5000/api/v1/user/emailverify?token=${token}
+        ${process.env.CLIENT_URL}/emailactivation?token=${token}
 
         This email was sent by Auto Lanka Services. If you didn't create an account, you can safely ignore this email.
       `
