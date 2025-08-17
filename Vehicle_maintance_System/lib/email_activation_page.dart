@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:car_service_app/api_service.dart'; // Import ApiService
 
 class EmailActivationPage extends StatefulWidget {
   final String token;
@@ -22,9 +23,11 @@ class _EmailActivationPageState extends State<EmailActivationPage> {
     print("📦 Received token in Flutter: ${widget.token}");
 
     try {
-      final response = await http.get(Uri.parse(
-        'http://localhost:5000/api/v1/user/emailverify?token=${widget.token}',
-      ));
+      // Use ApiService.baseUrl for the API call to your backend
+      // Remove '/user' from baseUrl to get the base API path for emailverify
+      final String apiVerificationUrl = ApiService.baseUrl.replaceFirst('/user', '') + '/emailverify?token=${widget.token}';
+
+      final response = await http.get(Uri.parse(apiVerificationUrl));
 
       if (response.statusCode == 200) {
         setState(() {
