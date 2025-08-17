@@ -1,7 +1,7 @@
-import multer from "multer"; // Added multer import
+import multer from "multer";
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-import path from "path"; // Re-added path import for fileFilter
+import path from "path";
 
 dotenv.config();
 
@@ -16,6 +16,7 @@ const fileFilter = (req, file, cb) => {
     "image/jpeg",
     "image/png",
     "image/gif",
+    "image/jpg", // Added this MIME type
   ];
 
   const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
@@ -33,20 +34,18 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Initialize multer for memory storage (since we'll upload to Supabase)
 const upload = multer({
-  storage: multer.memoryStorage(), // Use memory storage instead of disk
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max file size
   fileFilter: fileFilter,
 });
 
-// Function to upload file to Supabase
 const uploadToSupabase = async (file) => {
   const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
   const fileName = `${uniqueSuffix}${path.extname(file.originalname).toLowerCase()}`;
   
   const { data, error } = await supabase.storage
-    .from('vehicle-images') // Supabase bucket name
+    .from('vehicle-images')
     .upload(fileName, file.buffer, {
       contentType: file.mimetype,
     });
@@ -56,7 +55,6 @@ const uploadToSupabase = async (file) => {
     throw new Error(`Failed to upload image to Supabase: ${error.message}`);
   }
 
-  // Get the public URL for the uploaded file
   const { publicUrl } = supabase.storage
     .from('vehicle-images')
     .getPublicUrl(fileName).data;
