@@ -35,7 +35,7 @@ class _VehicleRegistrationPageState extends State<VehicleRegistrationPage> {
   ];
 
   final ImagePicker _picker = ImagePicker();
-  final String baseUrl = 'http://localhost:5000/api/v1/user';
+  final String baseUrl = 'http://10.116.44.203:5000/api/v1/user';
 
   @override
   void initState() {
@@ -162,12 +162,14 @@ class _VehicleRegistrationPageState extends State<VehicleRegistrationPage> {
           try {
             final bytes = await _uploadedImage!.readAsBytes();
             final fileName = _uploadedImage!.name;
+            final fileExtension = fileName.split('.').last.toLowerCase();
             request.files.add(
               http.MultipartFile.fromBytes(
                 'vehicleImage',
                 bytes,
                 filename: fileName,
-                contentType: MediaType('image', fileName.split('.').last.toLowerCase()),
+                // Changed content type to handle a broader range of image types
+                contentType: MediaType('image', fileExtension),
               ),
             );
             print('Image added: $fileName, size: ${bytes.length} bytes');
