@@ -18,9 +18,10 @@ import {
   loadServiceTypes,
   loadMaintenanceHistory,
   loadCurrentServiceStatus,
-  getUserProfile // ✅ Added here
+  getUserProfile,
+  updateVehicleImage
 } from "./controller.mjs";
-import upload from "../middleware/upload.mjs";
+import { upload } from "../middleware/upload.mjs"; // Changed to named import
 
 const userRouter = Router();
 
@@ -28,10 +29,10 @@ const userRouter = Router();
 userRouter.post("/register", registerUser);
 userRouter.post("/login", loginUser);
 userRouter.get("/emailverify", emailVerify);
-userRouter.post("/otpverify", otpVerify); // ✅ Only POST used here
+userRouter.post("/otpverify", otpVerify);
 userRouter.get("/authUser", authUser);
 userRouter.get("/logout", logout);
-userRouter.get("/profile", getUserProfile); // ✅ NEW: User Profile route
+userRouter.get("/profile", getUserProfile);
 
 // 📧 Email / Password
 userRouter.post("/resend-verify-email", resendVerifyEmail);
@@ -41,6 +42,7 @@ userRouter.post("/reset-password", resetPassword);
 
 // 🚗 Vehicle Management
 userRouter.post("/register-vehicle", upload.single("vehicleImage"), registerVehicle);
+userRouter.post("/update-vehicle-image", upload.single("vehicleImage"), updateVehicleImage);
 userRouter.get("/loadVehicleTypes", loadVehicleTypes);
 userRouter.get("/loadVehicleBrands", loadVehicleBrands);
 userRouter.get("/vehicles", loadVehicles);
