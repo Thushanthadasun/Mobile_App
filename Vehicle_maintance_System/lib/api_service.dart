@@ -105,6 +105,19 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> createPayment(int reservationId) async {
+    final res = await http.post(
+      Uri.parse(
+          '$baseUrl/../payments/create'), // becomes /api/v1/payments/create
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'reservation_id': reservationId}),
+    );
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    throw Exception('Create payment failed: ${res.body}');
+  }
+
   // 🛠️ GET SERVICE TYPES
   Future<List<Map<String, String>>> getServiceTypes() async {
     final response = await http.get(
@@ -172,7 +185,7 @@ class ApiService {
                 'service_record_id': item['service_record_id'].toString(),
                 'service_description':
                     item['service_description']?.toString() ?? 'N/A',
-                'price': item['price']?.toString() ?? 'N/A',
+                'final_amount': item['final_amount']?.toString() ?? 'N/A',
                 'created_datetime':
                     item['created_datetime']?.toString() ?? 'N/A',
                 'is_paid': item['is_paid']?.toString() ?? 'N/A',
@@ -221,7 +234,7 @@ class ApiService {
                 'end_time': item['end_time'].toString(),
                 'duration': item['duration'].toString(),
                 'status': item['status_name'].toString(),
-                'price': item['price']?.toString() ?? '0.0',
+                'final_amount': item['final_amount']?.toString() ?? '0.0',
                 'is_paid': item['is_paid']?.toString() ?? 'false',
                 'service_record_id': item['service_record_id']?.toString(),
               })
