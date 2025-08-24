@@ -25,7 +25,7 @@ class _EmailActivationPageState extends State<EmailActivationPage> {
     try {
       // Use ApiService.baseUrl for the API call to your backend
       // Remove '/user' from baseUrl to get the base API path for emailverify
-      final String apiVerificationUrl = ApiService.baseUrl.replaceFirst('/user', '') + '/emailverify?token=${widget.token}';
+      final String apiVerificationUrl = 'http://localhost:5000/api/v1/user/emailverify?token=${widget.token}';
 
       final response = await http.get(Uri.parse(apiVerificationUrl));
 
