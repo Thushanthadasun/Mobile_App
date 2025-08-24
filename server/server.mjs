@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import adminRouter from "./src/admin/routes.mjs";
 import userRouter from "./src/user/routes.mjs";
 import cookieParser from "cookie-parser";
+import paymentsRouter from "./src/payments/routes.mjs";
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -25,8 +26,8 @@ app.use(
         "http://localhost:5173",           // Specific port if needed
         "http://127.0.0.1:5173",
         "http://localhost:3000",           // Explicitly added for Flutter web
-        "http://10.116.44.203:3000",       // Your computer IP for Flutter web
-        "http://10.116.44.203:5000",       // Your computer IP for mobile access
+        "http://192.168.1.147:3000",       // Your computer IP for Flutter web
+        "http://192.168.1.147:5000",       // Your computer IP for mobile access
         /^http:\/\/10\.116\.44\.\d+:\d+$/, // Allow any device on your local network
         null                               // Allow mobile apps (they don't send origin)
       ];
@@ -65,10 +66,11 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use("/api/v1/user/", userRouter);
 app.use("/api/v1/admin/", adminRouter);
+app.use("/api/v1/payments", paymentsRouter);
 
 app.listen(PORT, HOST, () => {
   console.log(`Server is running on ${HOST}:${PORT}`);
   console.log(`Server accessible at:`);
   console.log(`  - Local: http://localhost:${PORT}`);
-  console.log(`  - Network: http://10.116.44.203:${PORT}`);
+  console.log(`  - Network: http://192.168.1.147:${PORT}`);
 });
