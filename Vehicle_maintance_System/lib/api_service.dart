@@ -31,7 +31,20 @@ class ApiService {
       return false;
     }
   }
+// 🔄 RESET PASSWORD DIRECT
+Future<bool> resetPasswordDirect(String email, String newPassword) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/reset-password-direct'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'email': email,
+      'password': newPassword,
+    }),
+  );
 
+  print('Reset password response: ${response.statusCode}, ${response.body}');
+  return response.statusCode == 200;
+}
   // 📝 SIGNUP
   Future<bool> signup(Map<String, dynamic> userData) async {
     print('Sending signup data: $userData');
@@ -56,7 +69,7 @@ class ApiService {
     }
 
     final response = await http.get(
-      Uri.parse('$baseUrl/authUser'), // ✅ Fix here
+      Uri.parse('$baseUrl/authUser'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -70,6 +83,10 @@ class ApiService {
         'lname': data['lname']?.toString() ?? '',
         'email': data['email']?.toString() ?? '',
         'mobile': data['mobile']?.toString() ?? '',
+        'nicno': data['nicno']?.toString() ?? '',
+        'address_line1': data['address_line1']?.toString() ?? '',
+        'address_line2': data['address_line2']?.toString() ?? '',
+        'address_line3': data['address_line3']?.toString() ?? '',
       };
     } else {
       print('❌ Failed to load profile: ${response.body}');
@@ -95,7 +112,8 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
     );
-
+  
+  
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((item) => item['license_plate'].toString()).toList();
@@ -104,20 +122,20 @@ class ApiService {
       throw Exception('Failed to load vehicles');
     }
   }
-
+  
   Future<Map<String, dynamic>> createPayment(int reservationId) async {
-    final res = await http.post(
-      Uri.parse(
-          '$baseUrl/../payments/create'), // becomes /api/v1/payments/create
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'reservation_id': reservationId}),
-    );
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
-    }
-    throw Exception('Create payment failed: ${res.body}');
+  final res = await http.post(
+    Uri.parse(
+        '$baseUrl/../payments/create'), // becomes /api/v1/payments/create
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'reservation_id': reservationId}),
+  );
+  if (res.statusCode == 200) {
+    return jsonDecode(res.body) as Map<String, dynamic>;
   }
-
+  throw Exception('Create payment failed: ${res.body}');
+  }
+  
   // 🛠️ GET SERVICE TYPES
   Future<List<Map<String, String>>> getServiceTypes() async {
     final response = await http.get(
@@ -183,11 +201,9 @@ class ApiService {
           .map((item) => {
                 'license_plate': item['license_plate'].toString(),
                 'service_record_id': item['service_record_id'].toString(),
-                'service_description':
-                    item['service_description']?.toString() ?? 'N/A',
+                'service_description': item['service_description']?.toString() ?? 'N/A',
                 'final_amount': item['final_amount']?.toString() ?? 'N/A',
-                'created_datetime':
-                    item['created_datetime']?.toString() ?? 'N/A',
+                'created_datetime': item['created_datetime']?.toString() ?? 'N/A',
                 'is_paid': item['is_paid']?.toString() ?? 'N/A',
                 'reserve_date': item['reserve_date']?.toString() ?? 'N/A',
                 'start_time': item['start_time']?.toString() ?? 'N/A',
@@ -219,10 +235,7 @@ class ApiService {
       final List<dynamic> data = jsonDecode(response.body);
       print('Raw API response for current-service-status: $data');
       return data
-          .where((item) =>
-              item['reserve_date'] != null &&
-              item['start_time'] != null &&
-              item['end_time'] != null)
+          .where((item) => item['reserve_date'] != null && item['start_time'] != null && item['end_time'] != null)
           .map((item) => {
                 'reservation_id': item['reservation_id'].toString(),
                 'license_plate': item['license_plate'].toString(),
