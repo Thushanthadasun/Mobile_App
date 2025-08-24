@@ -19,7 +19,8 @@ import {
   loadMaintenanceHistory,
   loadCurrentServiceStatus,
   getUserProfile,
-  updateVehicleImage
+  updateVehicleImage,
+  resetPasswordDirect, confirmPasswordReset 
 } from "./controller.mjs";
 import { upload } from "../middleware/upload.mjs"; // Changed to named import
 
@@ -39,6 +40,8 @@ userRouter.post("/resend-verify-email", resendVerifyEmail);
 userRouter.post("/forgot-password-process", forgotPassword);
 userRouter.get("/verify-password-token", verifyResetPasswordToken);
 userRouter.post("/reset-password", resetPassword);
+userRouter.post("/reset-password-direct", resetPasswordDirect);
+userRouter.get("/confirm-password-reset", confirmPasswordReset);
 
 // 🚗 Vehicle Management
 userRouter.post("/register-vehicle", upload.single("vehicleImage"), registerVehicle);
