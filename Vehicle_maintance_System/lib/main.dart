@@ -8,6 +8,8 @@ import 'signup_page.dart';
 import 'email_activation_page.dart';
 import 'vehicle_list_page.dart';
 import 'vehicle_registration_page.dart';
+import 'forgot_password_page.dart';  
+import 'password_reset_confirmation_page.dart';  
 
 void main() {
   runApp(const MyApp());
@@ -28,18 +30,31 @@ class MyApp extends StatelessWidget {
         '/book_now': (context) => const BookNow(),
         '/vehicle_list': (context) => const VehicleListPage(),
         '/vehicle_registration': (context) => VehicleRegistrationPage(), // ✅ Removed const
+        '/forgot-password': (context) => const ForgotPasswordPage(),
       },
       onGenerateRoute: (settings) {
-        final uri = Uri.parse(settings.name ?? '');
-        if (uri.path == '/emailactivation' &&
-            uri.queryParameters.containsKey('token')) {
-          final token = uri.queryParameters['token']!;
-          return MaterialPageRoute(
-            builder: (context) => EmailActivationPage(token: token),
-          );
-        }
-        return null;
-      },
+  final uri = Uri.parse(settings.name ?? '');
+  
+  // Email activation route
+  if (uri.path == '/emailactivation' &&
+      uri.queryParameters.containsKey('token')) {
+    final token = uri.queryParameters['token']!;
+    return MaterialPageRoute(
+      builder: (context) => EmailActivationPage(token: token),
+    );
+  }
+  
+  // Password reset confirmation route
+  if (uri.path == '/confirm-password-reset' &&
+      uri.queryParameters.containsKey('token')) {
+    final token = uri.queryParameters['token']!;
+    return MaterialPageRoute(
+      builder: (context) => PasswordResetConfirmationPage(token: token),
+    );
+  }
+  
+  return null;
+},
     );
   }
 }
