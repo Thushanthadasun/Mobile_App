@@ -63,3 +63,4 @@ const uploadToSupabase = async (file) => {
 };
 
 export { upload, uploadToSupabase };
+
