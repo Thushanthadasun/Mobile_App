@@ -4,33 +4,26 @@ import { sendEmail } from "../utils/email.mjs";
 import { uploadToSupabase } from "../middleware/upload.mjs";
 import dotenv from "dotenv";
 import pool from "../../db.mjs";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
 export const registerUser = async (req, res) => {
   try {
-    const { fname, lname, email, mobile, password } = req.body;
-    if (!fname || !lname || !email || !mobile || !password) {
+    const { fname, lname, email, mobile, nicno, address_line1, address_line2, address_line3, password } = req.body;
+    if (!fname || !lname || !email || !mobile || !nicno || !address_line1 || !password) {
       return res.status(400).json({ message: "Missing required fields" });
     }
     const strPwd = String(password);
     const hashedPassword = await bcrypt.hash(strPwd, 10);
 
-    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
+    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (checkUser.rows.length > 0) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    const checkMobile = await pool.query(
-      "SELECT * FROM mobile_number WHERE mobile_no = $1",
-      [mobile]
-    );
-    if (
-      checkMobile.rows.length > 0 &&
-      checkMobile.rows[0].isotpverified === true
-    ) {
+    const checkMobile = await pool.query("SELECT * FROM mobile_number WHERE mobile_no = $1", [mobile]);
+    if (checkMobile.rows.length > 0 && checkMobile.rows[0].isotpverified === true) {
       return res.status(400).json({ message: "Mobile number already exists" });
     }
 
@@ -55,12 +48,16 @@ export const registerUser = async (req, res) => {
       mobileid = updateMobile.rows[0].mobile_id;
     }
 
-    const getMaxUser = await pool.query(
-      "SELECT COUNT(user_id) AS maxuser FROM users"
+    const addAddress = await pool.query(
+      "INSERT INTO addresses (address_line1, address_line2, address_line3) VALUES ($1, $2, $3) RETURNING address_id",
+      [address_line1, address_line2 || null, address_line3 || null]
     );
+    const addressId = addAddress.rows[0].address_id;
+
+    const getMaxUser = await pool.query("SELECT COUNT(user_id) AS maxuser FROM users");
 
     await pool.query(
-      "INSERT INTO users (user_id, first_name, last_name, email, password, mobile_id, registered_date, user_type_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+      "INSERT INTO users (user_id, first_name, last_name, email, password, mobile_id, registered_date, user_type_id, nicno, address_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
       [
         "CUS" + (parseInt(getMaxUser.rows[0].maxuser) + 1),
         fname,
@@ -70,6 +67,8 @@ export const registerUser = async (req, res) => {
         mobileid,
         formattedDate,
         2,
+        nicno,
+        addressId,
       ]
     );
 
@@ -99,10 +98,7 @@ export const bookService = async (req, res) => {
     }
     const userID = decodedToken.userID;
 
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
-      [userID]
-    );
+    const checkUser = await pool.query("SELECT * FROM users WHERE user_id = $1", [userID]);
     if (checkUser.rows.length === 0) {
       return res.status(400).json({ message: "User not found" });
     }
@@ -165,9 +161,9 @@ export const bookService = async (req, res) => {
 
       await pool.query(
         `INSERT INTO reservations (
-          vehicle_id, service_type_id, reserve_date, start_time, end_time, reservation_status, notes
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [vehicleId, service_type_id, preferredDate, startTime, endTime, 1, notes || null]
+          vehicle_id, service_type_id, reserve_date, start_time, end_time, end_date, reservation_status, notes
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [vehicleId, service_type_id, preferredDate, startTime, endTime, preferredDate, 1, notes || null]
       );
     }
 
@@ -212,10 +208,7 @@ export const loadDashboard = async (req, res) => {
       return res.status(401).json({ message: "Invalid token" });
     }
     const userID = decodedToken.userID;
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
-      [userID]
-    );
+    const checkUser = await pool.query("SELECT * FROM users WHERE user_id = $1", [userID]);
     if (checkUser.rows.length === 0) {
       return res.status(400).json({ message: "Invalid User" });
     }
@@ -242,10 +235,7 @@ export const loadVehicles = async (req, res) => {
     const userID = decodedToken.userID;
     console.log(`Fetching vehicles for userID: ${userID}`);
 
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
-      [userID]
-    );
+    const checkUser = await pool.query("SELECT * FROM users WHERE user_id = $1", [userID]);
     if (checkUser.rows.length === 0) {
       console.error(`User not found for userID: ${userID}`);
       return res.status(400).json({ message: "User not found" });
@@ -322,10 +312,7 @@ export const loadMaintenanceHistory = async (req, res) => {
     const userID = decodedToken.userID;
     console.log(`Fetching maintenance history for userID: ${userID}`);
 
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
-      [userID]
-    );
+    const checkUser = await pool.query("SELECT * FROM users WHERE user_id = $1", [userID]);
     if (checkUser.rows.length === 0) {
       console.error(`User not found for userID: ${userID}`);
       return res.status(400).json({ message: "User not found" });
@@ -377,10 +364,7 @@ export const loadCurrentServiceStatus = async (req, res) => {
     const userID = decodedToken.userID;
     console.log(`Fetching current service status for userID: ${userID}`);
 
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
-      [userID]
-    );
+    const checkUser = await pool.query("SELECT * FROM users WHERE user_id = $1", [userID]);
     if (checkUser.rows.length === 0) {
       console.error(`User not found for userID: ${userID}`);
       return res.status(400).json({ message: "User not found" });
@@ -430,9 +414,18 @@ export const getUserProfile = async (req, res) => {
     const decoded = verifyToken(token);
 
     const query = `
-      SELECT u.first_name, u.last_name, u.email, m.mobile_no
+      SELECT 
+        u.first_name, 
+        u.last_name, 
+        u.email, 
+        m.mobile_no, 
+        u.nicno,
+        a.address_line1,
+        a.address_line2,
+        a.address_line3
       FROM users u
       JOIN mobile_number m ON u.mobile_id = m.mobile_id
+      LEFT JOIN addresses a ON u.address_id = a.address_id
       WHERE u.user_id = $1
     `;
 
@@ -486,10 +479,10 @@ export const loginUser = async (req, res) => {
         fname: user.first_name,
         lname: user.last_name,
         email: user.email,
-        mobile: user.mobile_no
+        mobile: user.mobile_no,
+        nicno: user.nicno
       }
     });
-
   } catch (error) {
     console.error("Error in loginUser:", error.message, error.stack);
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
@@ -506,20 +499,12 @@ export const emailVerify = async (req, res) => {
     if (!emailadd) {
       return res.status(400).json({ message: "Invalid token" });
     }
-    const checkEmail = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [emailadd.email]
-    );
+    const checkEmail = await pool.query("SELECT * FROM users WHERE email = $1", [emailadd.email]);
     if (checkEmail.rows.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "No registered email from this token" });
+      return res.status(400).json({ message: "No registered email from this token" });
     }
 
-    await pool.query(
-      "UPDATE users SET isemailverified = $1 WHERE email = $2",
-      [true, emailadd.email]
-    );
+    await pool.query("UPDATE users SET isemailverified = $1 WHERE email = $2", [true, emailadd.email]);
     res.status(200).json({ message: "Email verified" });
   } catch (error) {
     console.error("Error in emailVerify:", error.message, error.stack);
@@ -533,18 +518,13 @@ export const resendVerifyEmail = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
-    const checkEmail = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
+    const checkEmail = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (checkEmail.rows.length === 0) {
       return res.status(400).json({ message: "Invalid Email" });
     }
     const user = checkEmail.rows[0];
     if (user.isemailverified) {
-      return res
-        .status(200)
-        .json({ message: "Email already verified. Go to login!" });
+      return res.status(200).json({ message: "Email already verified. Go to login!" });
     }
     sendVerificationEmail(email);
     res.status(200).json({ message: "Email sent" });
@@ -557,7 +537,6 @@ export const resendVerifyEmail = async (req, res) => {
 const sendVerificationEmail = async (email) => {
   try {
     const token = tokenGen({ email });
-    // Use CLIENT_URL for the link that opens the Flutter web app's activation page
     await sendEmail(
       email,
       "Auto Lanka Services, Email Verification",
@@ -586,10 +565,7 @@ export const otpVerify = async (req, res) => {
     if (!mobile || !otp) {
       return res.status(400).json({ message: "Mobile number and OTP are required" });
     }
-    const checkMobile = await pool.query(
-      "SELECT * FROM mobile_number WHERE mobile_no = $1",
-      [mobile]
-    );
+    const checkMobile = await pool.query("SELECT * FROM mobile_number WHERE mobile_no = $1", [mobile]);
     if (checkMobile.rows.length === 0) {
       return res.status(400).json({ message: "Invalid Mobile Number" });
     }
@@ -615,9 +591,7 @@ export const forgotPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
-    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
+    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (checkUser.rows.length === 0) {
       return res.status(400).json({ message: "Invalid Email" });
     }
@@ -664,14 +638,9 @@ export const verifyResetPasswordToken = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Invalid token" });
     }
-    const checkEmail = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email.email]
-    );
+    const checkEmail = await pool.query("SELECT * FROM users WHERE email = $1", [email.email]);
     if (checkEmail.rows.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Email not found. Check the link again." });
+      return res.status(400).json({ message: "Email not found. Check the link again." });
     }
     res.status(200).json({ message: "Token verified" });
   } catch (error) {
@@ -690,18 +659,13 @@ export const resetPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Invalid token" });
     }
-    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email.email,
-    ]);
+    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [email.email]);
     if (checkUser.rows.length === 0) {
       return res.status(400).json({ message: "Invalid Email" });
     }
     const strPwd = String(password);
     const hashedPassword = await bcrypt.hash(strPwd, 10);
-    await pool.query(
-      "UPDATE users SET password = $1 WHERE email = $2",
-      [hashedPassword, email.email]
-    );
+    await pool.query("UPDATE users SET password = $1 WHERE email = $2", [hashedPassword, email.email]);
     res.status(200).json({ message: "Password updated" });
   } catch (error) {
     console.error("Error in resetPassword:", error.message, error.stack);
@@ -720,10 +684,7 @@ export const loadUserData = async (req, res) => {
       return res.status(401).json({ message: "Invalid token" });
     }
     const userID = decodedToken.userID;
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
-      [userID]
-    );
+    const checkUser = await pool.query("SELECT * FROM users WHERE user_id = $1", [userID]);
     if (checkUser.rows.length === 0) {
       return res.status(400).json({ message: "Invalid User" });
     }
@@ -751,9 +712,14 @@ export const authUser = async (req, res) => {
          first_name AS fname,
          last_name AS lname,
          email,
-         mobile_no 
+         mobile_no AS mobile,
+         nicno,
+         address_line1,
+         address_line2,
+         address_line3
        FROM users 
        INNER JOIN mobile_number ON users.mobile_id = mobile_number.mobile_id 
+       LEFT JOIN addresses ON users.address_id = addresses.address_id
        WHERE users.user_id = $1`,
       [decoded.userID]
     );
@@ -768,7 +734,11 @@ export const authUser = async (req, res) => {
       fname: user.fname,
       lname: user.lname,
       email: user.email,
-      mobile: user.mobile_no,
+      mobile: user.mobile,
+      nicno: user.nicno,
+      address_line1: user.address_line1 || '',
+      address_line2: user.address_line2 || '',
+      address_line3: user.address_line3 || '',
     });
   } catch (error) {
     console.error("Error in authUser:", error.message);
@@ -781,23 +751,14 @@ export const logout = async (req, res) => {
     res.clearCookie("token");
     res.status(200).json({ message: "Logged out" });
   } catch (error) {
-    console.error("Error in logout:", error.message, error.stack);
+    console.error("register vehicle error:", error.message, error.stack);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
 
 export const registerVehicle = async (req, res) => {
   try {
-    const {
-      licensePlate,
-      vehicleType,
-      make,
-      model,
-      color,
-      year,
-      transmission,
-      fuelType,
-    } = req.body;
+    const { licensePlate, vehicleType, make, model, color, year, transmission, fuelType } = req.body;
     if (!licensePlate || !vehicleType || !make || !model || !color || !year || !transmission || !fuelType) {
       return res.status(400).json({ message: "All vehicle fields are required" });
     }
@@ -812,18 +773,12 @@ export const registerVehicle = async (req, res) => {
     }
     const userID = decodedToken.userID;
 
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
-      [userID]
-    );
+    const checkUser = await pool.query("SELECT * FROM users WHERE user_id = $1", [userID]);
     if (checkUser.rows.length === 0) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const checkVehicle = await pool.query(
-      "SELECT * FROM vehicles WHERE license_plate = $1",
-      [licensePlate]
-    );
+    const checkVehicle = await pool.query("SELECT * FROM vehicles WHERE license_plate = $1", [licensePlate]);
     if (checkVehicle.rows.length > 0) {
       return res.status(400).json({ message: "License plate already registered" });
     }
@@ -915,6 +870,81 @@ export const updateVehicleImage = async (req, res) => {
     res.status(200).json({ message: "Vehicle image updated successfully" });
   } catch (error) {
     console.error("Error in updateVehicleImage:", error.message, error.stack);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+};
+export const resetPasswordDirect = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (checkUser.rows.length === 0) {
+      return res.status(400).json({ message: "Email not found" });
+    }
+
+    const strPwd = String(password);
+    const hashedPassword = await bcrypt.hash(strPwd, 10);
+
+    // Generate token for email verification
+    const token = tokenGen({ email, password: hashedPassword });
+    
+    // Send email with reset link
+    await sendPasswordResetDirectEmail(email, token);
+    
+    res.status(200).json({ message: "Password reset email sent" });
+  } catch (error) {
+    console.error("Error in resetPasswordDirect:", error.message, error.stack);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+const sendPasswordResetDirectEmail = async (email, token) => {
+  try {
+    await sendEmail(
+      email,
+      "Auto Lanka Services, Password Reset Confirmation",
+      `
+        Auto Lanka Services Password Reset
+
+        Click the following link to confirm your password reset:
+
+        <a href="${process.env.CLIENT_URL}/confirm-password-reset?token=${token}">Click here to confirm password reset</a>
+
+        If the button doesn't work, you can also copy and paste the following link into your browser:
+
+        ${process.env.CLIENT_URL}/confirm-password-reset?token=${token}
+
+        This email was sent by Auto Lanka Services. If you didn't request this, you can safely ignore this email.
+      `
+    );
+  } catch (error) {
+    console.error("Error in sendPasswordResetDirectEmail:", error.message, error.stack);
+  }
+};
+
+export const confirmPasswordReset = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).json({ message: "Token not found" });
+    }
+
+    const tokenData = verifyToken(token);
+    if (!tokenData) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+
+    const { email, password } = tokenData;
+    
+    // Update password in database
+    await pool.query("UPDATE users SET password = $1 WHERE email = $2", [password, email]);
+    
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Error in confirmPasswordReset:", error.message, error.stack);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
