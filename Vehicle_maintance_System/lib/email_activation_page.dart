@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:car_service_app/api_service.dart'; // Import ApiService
+import 'dart:convert';
+
+/// Keep ONE clear root for your API, without a trailing slash.
+const String apiRoot = 'http://localhost:5000/api/v1';
 
 class EmailActivationPage extends StatefulWidget {
   final String token;
@@ -20,33 +23,25 @@ class _EmailActivationPageState extends State<EmailActivationPage> {
   }
 
   Future<void> verifyEmail() async {
-    print("📦 Received token in Flutter: ${widget.token}");
+    final String url =
+        '$apiRoot/user/emailverify?token=${Uri.encodeComponent(widget.token)}';
+    print('VERIFY → GET $url');
 
     try {
-      // Use ApiService.baseUrl for the API call to your backend
-      // Remove '/user' from baseUrl to get the base API path for emailverify
-      final String apiVerificationUrl = 'http://localhost:5000/api/v1/user/emailverify?token=${widget.token}';
+      final res = await http.get(Uri.parse(url));
+      print('VERIFY ← ${res.statusCode} ${res.body}');
 
-      final response = await http.get(Uri.parse(apiVerificationUrl));
-
-      if (response.statusCode == 200) {
-        setState(() {
-          message = "✅ Email verified successfully!";
-        });
-
-        // Auto-redirect to login after 3 seconds
-        Future.delayed(const Duration(seconds: 3), () {
-          Navigator.pushReplacementNamed(context, '/login');
+      if (res.statusCode == 200) {
+        setState(() => message = "✅ Email verified successfully!");
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) Navigator.pushReplacementNamed(context, '/login');
         });
       } else {
-        setState(() {
-          message = "❌ Verification failed:\n${response.body}";
-        });
+        final body = res.body.isNotEmpty ? res.body : 'No body';
+        setState(() => message = "❌ Verification failed:\n$body");
       }
     } catch (e) {
-      setState(() {
-        message = "❌ Error contacting server:\n$e";
-      });
+      setState(() => message = "❌ Network error:\n$e");
     }
   }
 
@@ -55,22 +50,14 @@ class _EmailActivationPageState extends State<EmailActivationPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Email Verification"),
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.red.withOpacity(0.2), Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 18),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 18)),
         ),
       ),
     );
