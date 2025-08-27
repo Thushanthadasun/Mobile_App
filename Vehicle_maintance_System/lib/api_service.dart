@@ -3,49 +3,59 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
+  /// Your backend base for user routes
+  /// (server expects: /api/v1/user/…)
   static const String baseUrl = 'http://localhost:5000/api/v1/user';
 
-  // 🔐 LOGIN
+  // ---------------------------
+  // Helpers
+  // ---------------------------
+
+  /// Read the saved JWT from SharedPreferences
+  static Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
+  /// Build headers including Authorization when token exists
+  static Future<Map<String, String>> _authHeaders() async {
+    final token = await _getToken();
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  // ---------------------------
+  // Auth
+  // ---------------------------
+
+  /// 🔐 Login and persist token
   Future<bool> login(String email, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
+      body: jsonEncode({'email': email, 'password': password}),
     );
 
-    print('📥 Login response: ${response.body}'); // 🔍 Debug print
-
+    print('📥 Login response: ${response.body}');
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final token = data['token'];
+      final token = data['token'] as String?;
 
+      if (token == null) {
+        print('❌ No token in response');
+        return false;
+      }
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', token); // 🗝️ Save token locally
-
+      await prefs.setString('token', token);
       return true;
-    } else {
-      print('❌ Login failed: ${response.body}');
-      return false;
     }
+    print('❌ Login failed: ${response.body}');
+    return false;
   }
-// 🔄 RESET PASSWORD DIRECT
-Future<bool> resetPasswordDirect(String email, String newPassword) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/reset-password-direct'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'email': email,
-      'password': newPassword,
-    }),
-  );
 
-  print('Reset password response: ${response.statusCode}, ${response.body}');
-  return response.statusCode == 200;
-}
-  // 📝 SIGNUP
+  /// 📝 Signup (returns true on 201/200)
   Future<bool> signup(Map<String, dynamic> userData) async {
     print('Sending signup data: $userData');
     final response = await http.post(
@@ -58,22 +68,22 @@ Future<bool> resetPasswordDirect(String email, String newPassword) async {
     return response.statusCode == 201 || response.statusCode == 200;
   }
 
-  // 👤 GET USER PROFILE
-  Future<Map<String, dynamic>?> getUserProfile() async {
+  /// 🚪 Logout (clears stored token)
+  Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    await prefs.remove('token');
+  }
 
-    if (token == null) {
-      print('⚠️ No token found');
-      return null;
-    }
+  // ---------------------------
+  // Profile
+  // ---------------------------
 
+  /// 👤 Get user profile (fname, lname, email, mobile, etc.)
+  Future<Map<String, dynamic>?> getUserProfile() async {
+    final headers = await _authHeaders();
     final response = await http.get(
       Uri.parse('$baseUrl/authUser'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: headers,
     );
 
     if (response.statusCode == 200) {
@@ -88,55 +98,70 @@ Future<bool> resetPasswordDirect(String email, String newPassword) async {
         'address_line2': data['address_line2']?.toString() ?? '',
         'address_line3': data['address_line3']?.toString() ?? '',
       };
-    } else {
-      print('❌ Failed to load profile: ${response.body}');
-      return null;
     }
+    print('❌ Failed to load profile: ${response.body}');
+    return null;
   }
 
-  // 🚪 LOGOUT
-  void logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
+  /// ✉️ Update email immediately (server will send info email, no link)
+  Future<bool> updateEmail(String newEmail) async {
+    final headers = await _authHeaders();
+    final res = await http.put(
+      Uri.parse('$baseUrl/profile/email'),
+      headers: headers,
+      body: jsonEncode({'email': newEmail}),
+    );
+    if (res.statusCode == 200) return true;
+    print('❌ updateEmail failed: ${res.statusCode} ${res.body}');
+    return false;
   }
 
-  // 🚗 GET VEHICLES
+  /// 📱 Update contact number immediately (server will send info email)
+  Future<bool> updateContact(String newMobile) async {
+    final headers = await _authHeaders();
+    final res = await http.put(
+      Uri.parse('$baseUrl/profile/contact'),
+      headers: headers,
+      body: jsonEncode({'mobile': newMobile}),
+    );
+    if (res.statusCode == 200) return true;
+    print('❌ updateContact failed: ${res.statusCode} ${res.body}');
+    return false;
+  }
+
+  // ---------------------------
+  // Vehicles & Services
+  // ---------------------------
+
+  /// 🚗 List user vehicles (returns license plates)
   Future<List<String>> getVehicles() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
+    final headers = await _authHeaders();
     final response = await http.get(
       Uri.parse('$baseUrl/vehicles'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: headers,
     );
-  
-  
+
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((item) => item['license_plate'].toString()).toList();
-    } else {
-      print('Failed to load vehicles: ${response.body}');
-      throw Exception('Failed to load vehicles');
     }
+    print('Failed to load vehicles: ${response.body}');
+    throw Exception('Failed to load vehicles');
   }
-  
+
+  /// 💳 Create payment for a reservation (kept from your original code)
   Future<Map<String, dynamic>> createPayment(int reservationId) async {
-  final res = await http.post(
-    Uri.parse(
-        '$baseUrl/../payments/create'), // becomes /api/v1/payments/create
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'reservation_id': reservationId}),
-  );
-  if (res.statusCode == 200) {
-    return jsonDecode(res.body) as Map<String, dynamic>;
+    final res = await http.post(
+      Uri.parse('$baseUrl/../payments/create'), // -> /api/v1/payments/create
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'reservation_id': reservationId}),
+    );
+    if (res.statusCode == 200)
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    throw Exception('Create payment failed: ${res.body}');
   }
-  throw Exception('Create payment failed: ${res.body}');
-  }
-  
-  // 🛠️ GET SERVICE TYPES
+
+  /// 🛠️ Service types
   Future<List<Map<String, String>>> getServiceTypes() async {
     final response = await http.get(
       Uri.parse('$baseUrl/loadServiceTypes'),
@@ -152,47 +177,33 @@ Future<bool> resetPasswordDirect(String email, String newPassword) async {
                 'description': item['description'].toString(),
               })
           .toList();
-    } else {
-      print('Failed to load service types: ${response.body}');
-      throw Exception('Failed to load service types');
     }
+    print('Failed to load service types: ${response.body}');
+    throw Exception('Failed to load service types');
   }
 
-  // 📅 BOOK SERVICE
+  /// 📅 Book service
   Future<bool> bookService(Map<String, dynamic> bookingData) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
+    final headers = await _authHeaders();
     final response = await http.post(
       Uri.parse('$baseUrl/book-service'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: headers,
       body: jsonEncode(bookingData),
     );
 
     print('Book service response: ${response.statusCode}, ${response.body}');
+    if (response.statusCode == 200) return true;
 
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      print('Failed to book service: ${response.body}');
-      return false;
-    }
+    print('Failed to book service: ${response.body}');
+    return false;
   }
 
-  // 📜 GET MAINTENANCE HISTORY
+  /// 📜 Maintenance history
   Future<List<Map<String, dynamic>>> getMaintenanceHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
+    final headers = await _authHeaders();
     final response = await http.get(
       Uri.parse('$baseUrl/maintenance-history'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: headers,
     );
 
     if (response.statusCode == 200) {
@@ -201,9 +212,11 @@ Future<bool> resetPasswordDirect(String email, String newPassword) async {
           .map((item) => {
                 'license_plate': item['license_plate'].toString(),
                 'service_record_id': item['service_record_id'].toString(),
-                'service_description': item['service_description']?.toString() ?? 'N/A',
+                'service_description':
+                    item['service_description']?.toString() ?? 'N/A',
                 'final_amount': item['final_amount']?.toString() ?? 'N/A',
-                'created_datetime': item['created_datetime']?.toString() ?? 'N/A',
+                'created_datetime':
+                    item['created_datetime']?.toString() ?? 'N/A',
                 'is_paid': item['is_paid']?.toString() ?? 'N/A',
                 'reserve_date': item['reserve_date']?.toString() ?? 'N/A',
                 'start_time': item['start_time']?.toString() ?? 'N/A',
@@ -212,30 +225,27 @@ Future<bool> resetPasswordDirect(String email, String newPassword) async {
                 'service_name': item['service_name']?.toString() ?? 'N/A',
               })
           .toList();
-    } else {
-      print('Failed to load maintenance history: ${response.body}');
-      throw Exception('Failed to load maintenance history');
     }
+    print('Failed to load maintenance history: ${response.body}');
+    throw Exception('Failed to load maintenance history');
   }
 
-  // 📊 GET CURRENT SERVICE STATUS
+  /// 📊 Current service status
   Future<List<Map<String, dynamic>>> getCurrentServiceStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
+    final headers = await _authHeaders();
     final response = await http.get(
       Uri.parse('$baseUrl/current-service-status'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: headers,
     );
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       print('Raw API response for current-service-status: $data');
       return data
-          .where((item) => item['reserve_date'] != null && item['start_time'] != null && item['end_time'] != null)
+          .where((item) =>
+              item['reserve_date'] != null &&
+              item['start_time'] != null &&
+              item['end_time'] != null)
           .map((item) => {
                 'reservation_id': item['reservation_id'].toString(),
                 'license_plate': item['license_plate'].toString(),
@@ -252,9 +262,8 @@ Future<bool> resetPasswordDirect(String email, String newPassword) async {
                 'service_record_id': item['service_record_id']?.toString(),
               })
           .toList();
-    } else {
-      print('Failed to load current service status: ${response.body}');
-      throw Exception('Failed to load current service status');
     }
+    print('Failed to load current service status: ${response.body}');
+    throw Exception('Failed to load current service status');
   }
 }
