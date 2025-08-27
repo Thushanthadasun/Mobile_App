@@ -1,10 +1,14 @@
 import bcrypt from "bcrypt";
 import { tokenGen, tokenGenLogin, verifyToken } from "../utils/jwt.mjs";
-import { sendEmail } from "../utils/email.mjs";
+//import { sendEmail } from "../utils/email.mjs";
 import { uploadToSupabase } from "../middleware/upload.mjs";
 import dotenv from "dotenv";
 import pool from "../../db.mjs";
+//import jwt from "jsonwebtoken";
+//import { transporter } from "../mailer.mjs";
+//import jwt from "jsonwebtoken";
 import jwt from "jsonwebtoken";
+import { transporter } from "../mailer.mjs";
 
 dotenv.config();
 
@@ -72,9 +76,8 @@ export const registerUser = async (req, res) => {
       ]
     );
 
-    sendVerificationEmail(email);
-
-    res.status(201).json({ message: "Success" });
+          await sendVerificationEmail({ email, fname });
+          res.status(201).json({ message: "Success" });
   } catch (error) {
     console.error("Error in registerUser:", error.message, error.stack);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
@@ -173,6 +176,110 @@ export const bookService = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+// --- ADD near other exports in controller.mjs -----------------
+
+export const updateEmail = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const { userID } = verifyToken(token);
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ message: "New email is required" });
+
+    // email must be unique
+    const dupe = await pool.query("SELECT 1 FROM users WHERE email=$1 AND user_id<>$2", [email, userID]);
+    if (dupe.rowCount) return res.status(400).json({ message: "Email already in use" });
+
+    // update
+    const upd = await pool.query(
+      "UPDATE users SET email=$1, isemailverified=$2 WHERE user_id=$3 RETURNING first_name",
+      [email, true, userID]
+    );
+
+    const fname = upd.rows[0]?.first_name || "there";
+
+    // send an informational email (no click required)
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Auto Lanka Services — Email Updated",
+        html: `
+          <p>Hi ${fname},</p>
+          <p>Your account email was updated to <b>${email}</b>.</p>
+          <p>If you did not make this change, please contact support immediately.</p>
+        `,
+      });
+    } catch (e) {
+      console.warn("Email notice send failed (updateEmail):", e?.message || e);
+    }
+
+    res.status(200).json({ message: "Email updated" });
+  } catch (err) {
+    console.error("Error in updateEmail:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const updateContact = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const { userID } = verifyToken(token);
+    const { mobile } = req.body;
+
+    if (!mobile) return res.status(400).json({ message: "New contact number is required" });
+
+    // locate user's current mobile_id
+    const row = await pool.query("SELECT mobile_id, email, first_name FROM users WHERE user_id=$1", [userID]);
+    if (!row.rowCount) return res.status(404).json({ message: "User not found" });
+
+    const { mobile_id, email, first_name } = row.rows[0];
+
+    // ensure number not in use by another verified user
+    const dupe = await pool.query(
+      "SELECT 1 FROM mobile_number mn JOIN users u ON u.mobile_id = mn.mobile_id WHERE mn.mobile_no=$1 AND u.user_id<>$2",
+      [mobile, userID]
+    );
+    if (dupe.rowCount) return res.status(400).json({ message: "Mobile number already in use" });
+
+    // update (and mark verified = true so it works immediately, per your request)
+    await pool.query(
+      "UPDATE mobile_number SET mobile_no=$1, isotpverified=$2 WHERE mobile_id=$3",
+      [mobile, true, mobile_id]
+    );
+
+    // send info email to current account email (optional)
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Auto Lanka Services — Contact Number Updated",
+        html: `
+          <p>Hi ${first_name || "there"},</p>
+          <p>Your contact number was updated to <b>${mobile}</b>.</p>
+          <p>If you did not make this change, please contact support immediately.</p>
+        `,
+      });
+    } catch (e) {
+      console.warn("Email notice send failed (updateContact):", e?.message || e);
+    }
+
+    res.status(200).json({ message: "Contact updated" });
+  } catch (err) {
+    console.error("Error in updateContact:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// --- END ADD ---------------------------------------------------
+
 
 export const loadVehicleTypes = async (req, res) => {
   try {
@@ -493,24 +600,43 @@ export const emailVerify = async (req, res) => {
   try {
     const { token } = req.query;
     if (!token) {
+      console.log('[emailVerify] missing token');
       return res.status(400).json({ message: "Token not found" });
     }
-    const emailadd = verifyToken(token);
-    if (!emailadd) {
+
+    const decoded = verifyToken(token);
+    if (!decoded || !decoded.email) {
+      console.log('[emailVerify] invalid token:', decoded);
       return res.status(400).json({ message: "Invalid token" });
     }
-    const checkEmail = await pool.query("SELECT * FROM users WHERE email = $1", [emailadd.email]);
-    if (checkEmail.rows.length === 0) {
+
+    const email = decoded.email;
+    console.log('[emailVerify] decoded email:', email);
+
+    const user = await pool.query("SELECT isemailverified FROM users WHERE email = $1", [email]);
+    if (user.rows.length === 0) {
+      console.log('[emailVerify] no user for email:', email);
       return res.status(400).json({ message: "No registered email from this token" });
     }
 
-    await pool.query("UPDATE users SET isemailverified = $1 WHERE email = $2", [true, emailadd.email]);
-    res.status(200).json({ message: "Email verified" });
+    if (user.rows[0].isemailverified === true) {
+      console.log('[emailVerify] already verified:', email);
+      return res.status(200).json({ message: "Email already verified" });
+    }
+
+    const updated = await pool.query(
+      "UPDATE users SET isemailverified = $1 WHERE email = $2 RETURNING isemailverified",
+      [true, email]
+    );
+
+    console.log('[emailVerify] update rowCount:', updated.rowCount, 'new value:', updated.rows[0]?.isemailverified);
+    return res.status(200).json({ message: "Email verified" });
   } catch (error) {
     console.error("Error in emailVerify:", error.message, error.stack);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
 
 export const resendVerifyEmail = async (req, res) => {
   try {
@@ -526,7 +652,7 @@ export const resendVerifyEmail = async (req, res) => {
     if (user.isemailverified) {
       return res.status(200).json({ message: "Email already verified. Go to login!" });
     }
-    sendVerificationEmail(email);
+    await sendVerificationEmail({ email, fname: user.first_name });;
     res.status(200).json({ message: "Email sent" });
   } catch (error) {
     console.error("Error in resendVerifyEmail:", error.message, error.stack);
@@ -534,30 +660,42 @@ export const resendVerifyEmail = async (req, res) => {
   }
 };
 
-const sendVerificationEmail = async (email) => {
+const sendVerificationEmail = async ({ email, fname }) => {
   try {
     const token = tokenGen({ email });
-    await sendEmail(
-      email,
-      "Auto Lanka Services, Email Verification",
-      `
-        Auto Lanka Services Email Verification
 
-        Thank you for registering with Auto Lanka Services. To complete your registration and activate your account, please verify your email address by clicking the button below:
+    // Direct API verification link
+    const verifyUrl = `http://localhost:5000/api/v1/user/emailverify?token=${encodeURIComponent(token)}`;
 
-        <a href="${process.env.CLIENT_URL}/emailactivation?token=${token}">Click here to verify</a>
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Auto Lanka Services — Email Verification",
+      html: `
+        <p>Hi ${fname || "there"},</p>
+        <p>Please verify your email by clicking the button below:</p>
+        <p>
+          <a href="${verifyUrl}" 
+             style="background:#0a84ff;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">
+            Verify Email
+          </a>
+        </p>
+        <p>If the button doesn't work, copy this link:<br>${verifyUrl}</p>
+      `,
+    });
 
-        If the button doesn't work, you can also copy and paste the following link into your browser:
-
-        ${process.env.CLIENT_URL}/emailactivation?token=${token}
-
-        This email was sent by Auto Lanka Services. If you didn't create an account, you can safely ignore this email.
-      `
-    );
-  } catch (error) {
-    console.error("Error in sendVerificationEmail:", error.message, error.stack);
+    console.log("Verify URL:", verifyUrl);
+    console.log("MessageId:", info.messageId, "accepted:", info.accepted, "rejected:", info.rejected);
+  } catch (err) {
+    console.error("Error in sendVerificationEmail:", err);
   }
 };
+
+
+
+
+
+
 
 export const otpVerify = async (req, res) => {
   try {
@@ -595,7 +733,7 @@ export const forgotPassword = async (req, res) => {
     if (checkUser.rows.length === 0) {
       return res.status(400).json({ message: "Invalid Email" });
     }
-    sendPasswordResetEmail(email);
+    await sendPasswordResetEmail(email);
     res.status(200).json({ message: "Email sent" });
   } catch (error) {
     console.error("Error in forgotPassword:", error.message, error.stack);
@@ -603,30 +741,34 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
+// replace the whole function with this transporter version
 const sendPasswordResetEmail = async (email) => {
   try {
     const token = tokenGen({ email });
-    await sendEmail(
-      email,
-      "Auto Lanka Services, Reset Account Password",
-      `
-        Auto Lanka Services Account Password Reset
+    const base = process.env.CLIENT_URL || "http://localhost:3000/#";
+    const resetUrl = `${base}login/reset-password?token=${encodeURIComponent(token)}`;
 
-        Click the following link to reset your password in your Auto Lanka Service online account:
-
-        <a href="${process.env.CLIENT_URL}/login/reset-password?token=${token}">Click to reset password</a>
-
-        If the button doesn't work, you can also copy and paste the following link into your browser:
-
-        ${process.env.CLIENT_URL}/login/reset-password?token=${token}
-
-        This email was sent by Auto Lanka Services. If you didn't create an account, you can safely ignore this email.
-      `
-    );
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Auto Lanka Services — Reset Account Password",
+      html: `
+        <p>Reset your Auto Lanka Services account password:</p>
+        <p>
+          <a href="${resetUrl}" style="background:#0a84ff;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">
+            Reset Password
+          </a>
+        </p>
+        <p>If the button doesn't work, copy this link:<br>${resetUrl}</p>
+      `,
+    });
+    console.log("Password reset email accepted:", info.accepted, "rejected:", info.rejected);
   } catch (error) {
     console.error("Error in sendPasswordResetEmail:", error.message, error.stack);
+    throw error; // bubble up if you want the route to fail on send errors
   }
 };
+
 
 export const verifyResetPasswordToken = async (req, res) => {
   try {
@@ -870,81 +1012,6 @@ export const updateVehicleImage = async (req, res) => {
     res.status(200).json({ message: "Vehicle image updated successfully" });
   } catch (error) {
     console.error("Error in updateVehicleImage:", error.message, error.stack);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
-  }
-};
-export const resetPasswordDirect = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
-    }
-
-    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    if (checkUser.rows.length === 0) {
-      return res.status(400).json({ message: "Email not found" });
-    }
-
-    const strPwd = String(password);
-    const hashedPassword = await bcrypt.hash(strPwd, 10);
-
-    // Generate token for email verification
-    const token = tokenGen({ email, password: hashedPassword });
-    
-    // Send email with reset link
-    await sendPasswordResetDirectEmail(email, token);
-    
-    res.status(200).json({ message: "Password reset email sent" });
-  } catch (error) {
-    console.error("Error in resetPasswordDirect:", error.message, error.stack);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
-  }
-};
-
-const sendPasswordResetDirectEmail = async (email, token) => {
-  try {
-    await sendEmail(
-      email,
-      "Auto Lanka Services, Password Reset Confirmation",
-      `
-        Auto Lanka Services Password Reset
-
-        Click the following link to confirm your password reset:
-
-        <a href="${process.env.CLIENT_URL}/confirm-password-reset?token=${token}">Click here to confirm password reset</a>
-
-        If the button doesn't work, you can also copy and paste the following link into your browser:
-
-        ${process.env.CLIENT_URL}/confirm-password-reset?token=${token}
-
-        This email was sent by Auto Lanka Services. If you didn't request this, you can safely ignore this email.
-      `
-    );
-  } catch (error) {
-    console.error("Error in sendPasswordResetDirectEmail:", error.message, error.stack);
-  }
-};
-
-export const confirmPasswordReset = async (req, res) => {
-  try {
-    const { token } = req.query;
-    if (!token) {
-      return res.status(400).json({ message: "Token not found" });
-    }
-
-    const tokenData = verifyToken(token);
-    if (!tokenData) {
-      return res.status(400).json({ message: "Invalid token" });
-    }
-
-    const { email, password } = tokenData;
-    
-    // Update password in database
-    await pool.query("UPDATE users SET password = $1 WHERE email = $2", [password, email]);
-    
-    res.status(200).json({ message: "Password updated successfully" });
-  } catch (error) {
-    console.error("Error in confirmPasswordReset:", error.message, error.stack);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
